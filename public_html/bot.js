@@ -1,8 +1,10 @@
 $=jQueryVaadin;
 $.fn.extend({
-  vChange: function() {
+  vChange: function(hard) {
+    if(typeof(hard)==='undefined') hard=false;
     return this.each(function() {
-      this.dispatchEvent(new Event('change'));
+      this.dispatchEvent(new Event('keydown'));
+      if(hard) this.dispatchEvent(new Event('change'));
     });
   }
 });
@@ -147,13 +149,13 @@ var _BOT=function(){
                 if(getMode()==='new-game'){
                     clearInterval(newGameDone);
                     console.log('BOT: setting options...');
-                    $('#nameInput').val(options.name).vChange();
-                    $('#playersInput').val(options.players).vChange();
-                    $('.v-textfield').eq(2).val(options.terms).vChange();
-                    $('.v-textfield').eq(3).val(options.money).vChange();
-                    $('input[type="checkbox"]').eq(0).attr('checked',options.normal).vChange();
-                    $('input[type="checkbox"]').eq(1).attr('checked',options.luxury).vChange();
-                    $('input[type="checkbox"]').eq(2).attr('checked',options.credit).vChange();
+                    $('#nameInput').val(options.name).vChange(true);
+                    $('#playersInput').val(options.players).vChange(true);
+                    $('.v-textfield').eq(2).val(options.terms).vChange(true);
+                    $('.v-textfield').eq(3).val(options.money).vChange(true);
+                    $('input[type="checkbox"]').eq(0).attr('checked',options.normal).vChange(true);
+                    $('input[type="checkbox"]').eq(1).attr('checked',options.luxury).vChange(true);
+                    $('input[type="checkbox"]').eq(2).attr('checked',options.credit).vChange(true);
                     console.log('BOT: options set!');
                     setTimeout(function(){
                         console.log('BOT: creating game...');
@@ -179,7 +181,21 @@ var _BOT=function(){
     var newGame=this.newGame;
     
     var setDecisions=function(decisions,callback){
-        setMode('decision',function(){
+        if(getMode()!=='decision'){
+            setMode('decision',function(){
+                if(typeof(decisions.volume)!=='undefined') $('.v-textfield').eq(1).val(decisions.volume).vChange();
+                if(typeof(decisions.quality)!=='undefined') $('.v-textfield').eq(3).val(decisions.quality).vChange();
+                if(typeof(decisions.tvAds)!=='undefined') $('.v-textfield').eq(5).val(decisions.tvAds).vChange();
+                if(typeof(decisions.webAds)!=='undefined') $('.v-textfield').eq(8).val(decisions.webAds).vChange();
+                if(typeof(decisions.magazineAds)!=='undefined') $('.v-textfield').eq(10).val(decisions.magazineAds).vChange();
+                if(typeof(decisions.price)!=='undefined') $('.v-textfield').eq(12).val(decisions.price).vChange();
+                if(typeof(decisions.credit)!=='undefined') $('.v-textfield').eq(33).val(decisions.credit).vChange();
+                if(typeof(decisions.repayment)!=='undefined') $('.v-textfield').eq(35).val(decisions.repayment).vChange();
+                if(typeof(informations.lastDecisions)!=='undefined') $.extend(informations.lastDecisions,decisions);
+                else informations.lastDecisions=decisions;
+                callback.call();
+            });
+        }else{
             if(typeof(decisions.volume)!=='undefined') $('.v-textfield').eq(1).val(decisions.volume).vChange();
             if(typeof(decisions.quality)!=='undefined') $('.v-textfield').eq(3).val(decisions.quality).vChange();
             if(typeof(decisions.tvAds)!=='undefined') $('.v-textfield').eq(5).val(decisions.tvAds).vChange();
@@ -188,15 +204,15 @@ var _BOT=function(){
             if(typeof(decisions.price)!=='undefined') $('.v-textfield').eq(12).val(decisions.price).vChange();
             if(typeof(decisions.credit)!=='undefined') $('.v-textfield').eq(33).val(decisions.credit).vChange();
             if(typeof(decisions.repayment)!=='undefined') $('.v-textfield').eq(35).val(decisions.repayment).vChange();
-            informations.lastDecisions=decisions;
+            if(typeof(informations.lastDecisions)!=='undefined') $.extend(informations.lastDecisions,decisions);
+            else informations.lastDecisions=decisions;
             callback.call();
-        });
+        }
     };
     
     var getInformations=function(callback){
         setMode('decision',function(){
             informations.money=$('.v-textfield').eq(29).val();
-            console.log('error here?');
             setMode('results',function(){
                 informations.sold=$('.v-textfield').eq(1).val();
                 informations.results.push({sold: informations.sold, decisions: informations.lastDecisions});
@@ -215,7 +231,7 @@ var _BOT=function(){
         };
         endTerm=function(term,callback){
             newGameDone=setInterval(function(){
-                if(parseInt($('.v-label.v-widget.v-label-undef-w').eq(40).text())===term){
+                if(parseInt($('.v-label.v-widget.v-label-undef-w').eq(40).text())===term+1){
                     clearInterval(newGameDone);
                     callback.call();
                 }
@@ -251,21 +267,26 @@ var _BOT=function(){
                         credit: informations.lastDecisions.credit+informations.creditTrend
                     };
                 }
+                $(document).on('decisionsDelay',function(){
+                    setTimeout(function(){$(document).trigger('decisionsSet');},500);
+                });
                 $(document).on('decisionsSet',function(){
-                    var availableMoney=$('.v-textfield').eq(43).val();
+                    var availableMoney=parseFloat($('.v-textfield').eq(43).val());
                     var volume=parseInt($('.v-textfield').eq(1).val());
-                    var singleCost=$('.v-textfield').eq(4).val();
+                    var singleCost=parseFloat($('.v-textfield').eq(4).val());
+                    console.log(availableMoney+"<0 || "+availableMoney+">"+singleCost);
                     if(availableMoney<0 || availableMoney>singleCost){
                         var decisions={
                             volume: volume+Math.floor(availableMoney/singleCost)
                         };
-                        setDecisions(decisions,function(){$(document).trigger('decisionsSet');});
+                        setDecisions(decisions,function(){$(document).trigger('decisionsDelay');});
                     }else{
-                        $(document).unbind('decisionSet');
+                        $(document).unbind('decisionsSet');
+                        $(document).unbind('decisionsDelay');
                         endTerm(term+1,function(){makeDecisions(term+1,end);});
                     }
                 });
-                setDecisions(decisions,function(){$(document).trigger('decisionsSet');});
+                setDecisions(decisions,function(){$(document).trigger('decisionsDelay');});
             });
         };
         var enterG=function(end){
