@@ -39,45 +39,45 @@ var _BOT=function(){
     
     
     this.setMode=function(mode,callback,error){
-        if(mode=='lobby'){
+        if(mode==='lobby'){
             console.log('BOT: going to lobby...');
             setModeDone=setInterval(function(){
-                if(getMode()=='lobby'){
+                if(getMode()==='lobby'){
                     clearInterval(setModeDone);
                     console.log('BOT: lobby!');
-                    if(typeof(callback)!='undefined') callback.call();
+                    if(typeof(callback)!=='undefined') callback.call();
                     return true;
                 }
             },500);
             window.location='/#!';
-        }else if(mode=='information' || mode=='decision' || mode=='result'){
-            if(getMode()=='lobby'){
+        }else if(mode==='information' || mode==='decision' || mode==='result'){
+            if(getMode()==='lobby'){
                 console.log('BOT: enter the game first!');
-                if(typeof(error)!='undefined') error.call();
+                if(typeof(error)!=='undefined') error.call();
             }
             console.log('BOT: going to '+mode+'...');
             setModeDone=setInterval(function(){
-                if(getMode()!='lobby'){
+                if(getMode()!=='lobby'){
                     clearInterval(setModeDone);
                     console.log('BOT: game!');
                     setModeDone=setInterval(function(){
-                        if(getMode()==mode){
+                        if(getMode()===mode){
                             clearInterval(setModeDone);
                             console.log('BOT: '+mode+'!');
-                            if(typeof(callback)!='undefined') callback.call();
+                            if(typeof(callback)!=='undefined') callback.call();
                             return true;
                         }
                     },500);
-                    if(mode=='information') $('td.v-tabsheet-tabitemcell').eq(0).click();
-                    else if(mode=='decision') $('td.v-tabsheet-tabitemcell').eq(1).click();
-                    else if(mode=='result') $('td.v-tabsheet-tabitemcell').eq(2).click();
-                    else if(typeof(error)!='undefined') error.call();
+                    if(mode==='information') $('td.v-tabsheet-tabitemcell').eq(0).click();
+                    else if(mode==='decision') $('td.v-tabsheet-tabitemcell').eq(1).click();
+                    else if(mode==='result') $('td.v-tabsheet-tabitemcell').eq(2).click();
+                    else if(typeof(error)!=='undefined') error.call();
                     return true;
                 }
             },500);
             window.location='/#!game';
         }else{
-            if(typeof(error)!='undefined') error.call();
+            if(typeof(error)!=='undefined') error.call();
             return false;
         }
     };
@@ -88,20 +88,20 @@ var _BOT=function(){
     this.changeGame=function(game,callback,error){
         this.setMode('lobby',function(){
             console.log('BOT: enter "'+game+'" game...');
-            if($('.v-button.v-widget[id="join-'+game+'"]').length==0){
+            if($('.v-button.v-widget[id="join-'+game+'"]').length===0){
                 console.log('BOT: there is no "'+game+'" game!');
-                if(typeof(error)!='undefined') error.call();
+                if(typeof(error)!=='undefined') error.call();
                 return false;
-            }else if(jQueryVaadin('.v-button.v-widget[id="join-WDEC 91210"] .v-button-caption').text()=='Rezultaty'){
+            }else if(jQueryVaadin('.v-button.v-widget[id="join-WDEC 91210"] .v-button-caption').text()==='Rezultaty'){
                 console.log('BOT: game "'+game+'" has ended already!');
-                if(typeof(error)!='undefined') error.call();
+                if(typeof(error)!=='undefined') error.call();
                 return false;
             }
             changeGameDone=setInterval(function(){
-                if(getMode()!='lobby'){
+                if(getMode()!=='lobby'){
                     clearInterval(changeGameDone);
                     console.log('BOT: game "'+game+'"!');
-                    if(typeof(callback)!='undefined') callback.call();
+                    if(typeof(callback)!=='undefined') callback.call();
                     return true;
                 }
             },500);
@@ -119,14 +119,30 @@ var _BOT=function(){
             money: 300000,
             normal: true,
             luxury: false,
-            credit: true
+            credit: true,
+            fixedCost: 10000,
+            volumeInitValue: 70000,
+            qualityInitValue: 63,
+            qualityTrend: 0,
+            tvAdsInitValue: 50000,
+            tvAdsTrend: 0,
+            webAdsInitValue: 12000,
+            webAdsTrend: 0,
+            magazineAdsInitValue: 11000,
+            magazineAdsTrend: 0,
+            priceInitValue: 25,
+            priceTrend: 0,
+            creditInitValue: 800000,
+            creditTrend: -800000,
+            repaymentInitValue: 184000,
+            results: new Array()
         };
         $.extend(defaults,options);
         options=defaults;
-        $.extend(information,options);
+        $.extend(informations,options);
         setMode('lobby',function(){
             newGameDone=setInterval(function(){
-                if(getMode()=='new-game'){
+                if(getMode()==='new-game'){
                     clearInterval(newGameDone);
                     console.log('BOT: setting options...');
                     $('#nameInput').val(options.name).vChange();
@@ -140,14 +156,14 @@ var _BOT=function(){
                     setTimeout(function(){
                         console.log('BOT: creating game...');
                         newGameDone=setInterval(function(){
-                            if(getMode()=='lobby'){
+                            if(getMode()==='lobby'){
                                 clearInterval(newGameDone);
                                 console.log('BOT: game created!');
-                                if(typeof(callback)!='undefined') callback.call();
+                                if(typeof(callback)!=='undefined') callback.call();
                             }else if($('.v-errorindicator').length>1){
                                 clearInterval(newGameDone);
                                 console.log('BOT: game not created!');
-                                if(typeof(error)!='undefined') error.call();
+                                if(typeof(error)!=='undefined') error.call();
                             }
                         });
                         $('#addNewGameButton .v-button-wrap').click();
@@ -160,24 +176,27 @@ var _BOT=function(){
     };
     var newGame=this.newGame;
     
-    var setDecisions=function(decisions){
+    var setDecisions=function(decisions,callback){
         setMode('decision',function(){
-            if(typeof(decisions.volume)!='undefined') $('.v-textfield').eq(1).val(decisions.volume).vChange();
-            if(typeof(decisions.quality)!='undefined') $('.v-textfield').eq(3).val(decisions.quality).vChange();
-            if(typeof(decisions.tvAds)!='undefined') $('.v-textfield').eq(5).val(decisions.tvAds).vChange();
-            if(typeof(decisions.webAds)!='undefined') $('.v-textfield').eq(8).val(decisions.webAds).vChange();
-            if(typeof(decisions.magazineAds)!='undefined') $('.v-textfield').eq(10).val(decisions.magazineAds).vChange();
-            if(typeof(decisions.price)!='undefined') $('.v-textfield').eq(12).val(decisions.price).vChange();
-            if(typeof(decisions.credit)!='undefined') $('.v-textfield').eq(33).val(decisions.credit).vChange();
-            if(typeof(decisions.repayment)!='undefined') $('.v-textfield').eq(35).val(decisions.repayment).vChange();
+            if(typeof(decisions.volume)!=='undefined') $('.v-textfield').eq(1).val(decisions.volume).vChange();
+            if(typeof(decisions.quality)!=='undefined') $('.v-textfield').eq(3).val(decisions.quality).vChange();
+            if(typeof(decisions.tvAds)!=='undefined') $('.v-textfield').eq(5).val(decisions.tvAds).vChange();
+            if(typeof(decisions.webAds)!=='undefined') $('.v-textfield').eq(8).val(decisions.webAds).vChange();
+            if(typeof(decisions.magazineAds)!=='undefined') $('.v-textfield').eq(10).val(decisions.magazineAds).vChange();
+            if(typeof(decisions.price)!=='undefined') $('.v-textfield').eq(12).val(decisions.price).vChange();
+            if(typeof(decisions.credit)!=='undefined') $('.v-textfield').eq(33).val(decisions.credit).vChange();
+            if(typeof(decisions.repayment)!=='undefined') $('.v-textfield').eq(35).val(decisions.repayment).vChange();
+            informations.lastDecisions=decisions;
+            callback.call();
         });
     };
     
-    var getInformations=function(decisions,callback){
+    var getInformations=function(callback){
         setMode('decision',function(){
             informations.money=$('.v-textfield').eq(29).val();
             setMode('results',function(){
                 informations.sold=$('.v-textfield').eq(1).val();
+                informations.results.push({sold: informations.sold, decisions: informations.lastDecisions});
                 callback.call();
             });
         });
@@ -188,8 +207,9 @@ var _BOT=function(){
         var endGame=function(callback){
             console.log('BOT: store game information...');
             /* todo: store information */
+            console.log(informations);
             console.log('BOT: store game information...');
-        }
+        };
         endTerm=function(callback){
             newGameDone=setInterval(function(){
                 if(true /* todo: ready for next term condition */){
@@ -205,29 +225,50 @@ var _BOT=function(){
                     console.log('BOT: game has ended!');
                     end.call();
                     return true;
-                }else if(term==0){
+                }else if(term===0){
                     decisions={
-                        volume: 70000,
-                        quality: 63,
-                        tvAds: 50000,
-                        webAds: 12000,
-                        magazineAds: 11000,
-                        price: 25,
-                        credit: 800000,
-                        repayment: 184000
+                        volume: informations.volumeInitValue,
+                        quality: informations.qualityInitValue,
+                        tvAds: informations.tvAdsInitValue,
+                        webAds: informations.webAdsInitValue,
+                        magazineAds: informations.magazineAdsInitValue,
+                        price: informations.priceInitValue,
+                        credit: informations.creditInitValue,
+                        repayment: informations.repaymentInitValue
+                    };
+                }else{
+                    
+                    decisions={
+                        volume: informations.lastDecisions.volume,
+                        quality: informations.lastDecisions.quality+informations.qualityTrend,
+                        tvAds: informations.lastDecisions.tvAds+informations.tvAdsTrend,
+                        webAds: informations.lastDecisions.webAds+informations.webAdsTrend,
+                        magazineAds: informations.lastDecisions.magazineAds+informations.magazineAdsTrend,
+                        price: informations.lastDecisions.price+informations.priceTrend,
+                        credit: informations.lastDecisions.credit+informations.creditTrend
                     };
                 }
-                /* todo: decisions! */
-                setDecisions(decisions);
-                endTerm(function(){makeDecisions(term+1,end)});
+                $(document).on('decisionsSet',function(){
+                    var availableMoney=$('.v-textfield').eq(43).val();
+                    var volume=$('.v-textfield').eq(1).val();
+                    var singleCost=$('.v-textfield').eq(4).val();
+                    if(availableMoney<0 || availableMoney>singleCost){
+                        var decisions={
+                            volume: volume+Math.floor(availableMoney/singleCost)
+                        };
+                        setDecisions(decisions,$(document).trigger('decisionsSet'));
+                    }else{
+                        $(document).unbind('decisionSet');
+                        endTerm(function(){makeDecisions(term+1,end);});
+                    }
+                });
+                setDecisions(decisions,$(document).trigger('decisionsSet'));
             });
-        }
+        };
         var enterG=function(end){
-            changeGame(g,function(){makeDecisions(0,end)});
+            changeGame(g,function(){makeDecisions(0,end);});
         };
         g=newGame({},function(){enterG(endGame);});
-        
-    }
+    };
 };
-
 var BOT=new _BOT();
