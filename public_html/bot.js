@@ -31,7 +31,7 @@ var _BOT=function(){
         }else if($('td.v-tabsheet-tabitemcell-focus-first').length>0){
             mode='information';
         }else if($('td.v-tabsheet-tabitemcell').eq(1).hasClass('v-tabsheet-tabitemcell-selected')){
-            mode='decision';
+            mode='decisions';
         }else if($('td.v-tabsheet-tabitemcell').eq(2).hasClass('v-tabsheet-tabitemcell-selected')){
             mode='results';
         }else if($('#addNewGameButton').length>0){
@@ -53,7 +53,7 @@ var _BOT=function(){
                 }
             },500);
             window.location='/#!';
-        }else if(mode==='information' || mode==='decision' || mode==='results'){
+        }else if(mode==='information' || mode==='decisions' || mode==='results'){
             if(getMode()==='lobby'){
                 console.log('BOT: enter the game first!');
                 if(typeof(error)!=='undefined') error.call();
@@ -73,7 +73,7 @@ var _BOT=function(){
                         }
                     },500);
                     if(mode==='information') $('td.v-tabsheet-tabitemcell').eq(0).find('div').click();
-                    else if(mode==='decision') $('td.v-tabsheet-tabitemcell').eq(1).find('div').click();
+                    else if(mode==='decisions') $('td.v-tabsheet-tabitemcell').eq(1).find('div').click();
                     else if(mode==='results') $('td.v-tabsheet-tabitemcell').eq(2).find('div').click();
                     else if(typeof(error)!=='undefined') error.call();
                     return true;
@@ -181,8 +181,8 @@ var _BOT=function(){
     var newGame=this.newGame;
     
     var setDecisions=function(decisions,callback){
-        if(getMode()!=='decision'){
-            setMode('decision',function(){
+        if(getMode()!=='decisions'){
+            setMode('decisions',function(){
                 if(typeof(decisions.volume)!=='undefined') $('.v-textfield').eq(1).val(decisions.volume).vChange();
                 if(typeof(decisions.quality)!=='undefined') $('.v-textfield').eq(3).val(decisions.quality).vChange();
                 if(typeof(decisions.tvAds)!=='undefined') $('.v-textfield').eq(5).val(decisions.tvAds).vChange();
@@ -211,7 +211,7 @@ var _BOT=function(){
     };
     
     var getInformations=function(callback){
-        setMode('decision',function(){
+        setMode('decisions',function(){
             informations.money=$('.v-textfield').eq(29).val();
             setMode('results',function(){
                 informations.sold=$('.v-textfield').eq(1).val();
@@ -274,10 +274,10 @@ var _BOT=function(){
                     var availableMoney=parseFloat($('.v-textfield').eq(43).val());
                     var volume=parseInt($('.v-textfield').eq(1).val());
                     var singleCost=parseFloat($('.v-textfield').eq(4).val());
-                    console.log(availableMoney+"<0 || "+availableMoney+">"+singleCost);
                     if(availableMoney<0 || availableMoney>singleCost){
+                        var volumeRandomize=0.5+Math.random()/2;
                         var decisions={
-                            volume: volume+Math.floor(availableMoney/singleCost)
+                            volume: volume+Math.floor(volumeRandomize*availableMoney/singleCost)
                         };
                         setDecisions(decisions,function(){$(document).trigger('decisionsDelay');});
                     }else{
