@@ -11,7 +11,8 @@ $.fn.extend({
 var _BOT=function(){
     
     var mode=null;
-    var informations=null;
+    this.informations=new Object();
+    var informations=this.informations;
     
     
     this.getMode=function(){
@@ -26,7 +27,7 @@ var _BOT=function(){
         if($('.v-absolutelayout-wrapper-addGameLink').length>0){
             mode='lobby';
         }else if($('td.v-tabsheet-tabitemcell-focus-first').length>0){
-            mode='inforamtion';
+            mode='information';
         }else if($('td.v-tabsheet-tabitemcell').eq(1).hasClass('v-tabsheet-tabitemcell-selected')){
             mode='decision';
         }else if($('td.v-tabsheet-tabitemcell').eq(2).hasClass('v-tabsheet-tabitemcell-selected')){
@@ -50,7 +51,7 @@ var _BOT=function(){
                 }
             },500);
             window.location='/#!';
-        }else if(mode==='information' || mode==='decision' || mode==='result'){
+        }else if(mode==='information' || mode==='decision' || mode==='results'){
             if(getMode()==='lobby'){
                 console.log('BOT: enter the game first!');
                 if(typeof(error)!=='undefined') error.call();
@@ -59,18 +60,19 @@ var _BOT=function(){
             setModeDone=setInterval(function(){
                 if(getMode()!=='lobby'){
                     clearInterval(setModeDone);
-                    console.log('BOT: game!');
-                    setModeDone=setInterval(function(){
+                    setModeDone2=setInterval(function(){
                         if(getMode()===mode){
-                            clearInterval(setModeDone);
+                            clearInterval(setModeDone2);
                             console.log('BOT: '+mode+'!');
                             if(typeof(callback)!=='undefined') callback.call();
                             return true;
+                        }else{
+                            console.log('BOT: stuck in '+getMode()+'...');
                         }
                     },500);
-                    if(mode==='information') $('td.v-tabsheet-tabitemcell').eq(0).click();
-                    else if(mode==='decision') $('td.v-tabsheet-tabitemcell').eq(1).click();
-                    else if(mode==='result') $('td.v-tabsheet-tabitemcell').eq(2).click();
+                    if(mode==='information') $('td.v-tabsheet-tabitemcell').eq(0).find('div').click();
+                    else if(mode==='decision') $('td.v-tabsheet-tabitemcell').eq(1).find('div').click();
+                    else if(mode==='results') $('td.v-tabsheet-tabitemcell').eq(2).find('div').click();
                     else if(typeof(error)!=='undefined') error.call();
                     return true;
                 }
@@ -86,7 +88,7 @@ var _BOT=function(){
     
     
     this.changeGame=function(game,callback,error){
-        this.setMode('lobby',function(){
+        setMode('lobby',function(){
             console.log('BOT: enter "'+game+'" game...');
             if($('.v-button.v-widget[id="join-'+game+'"]').length===0){
                 console.log('BOT: there is no "'+game+'" game!');
@@ -194,6 +196,7 @@ var _BOT=function(){
     var getInformations=function(callback){
         setMode('decision',function(){
             informations.money=$('.v-textfield').eq(29).val();
+            console.log('error here?');
             setMode('results',function(){
                 informations.sold=$('.v-textfield').eq(1).val();
                 informations.results.push({sold: informations.sold, decisions: informations.lastDecisions});
@@ -210,18 +213,19 @@ var _BOT=function(){
             console.log(informations);
             console.log('BOT: store game information...');
         };
-        endTerm=function(callback){
+        endTerm=function(term,callback){
             newGameDone=setInterval(function(){
-                if(true /* todo: ready for next term condition */){
+                if(parseInt($('.v-label.v-widget.v-label-undef-w').eq(40).text())===term){
                     clearInterval(newGameDone);
                     callback.call();
                 }
-            });
+            },500);
             $('#sendDecisionButton .v-button-wrap').click();
         };
         var makeDecisions=function(term,end){
-            informations=getInformations(function(){
-                if(term>=information.terms){
+            console.log('BOT: making decisions, term: '+term);
+            getInformations(function(){
+                if(term>=informations.terms){
                     console.log('BOT: game has ended!');
                     end.call();
                     return true;
@@ -237,7 +241,6 @@ var _BOT=function(){
                         repayment: informations.repaymentInitValue
                     };
                 }else{
-                    
                     decisions={
                         volume: informations.lastDecisions.volume,
                         quality: informations.lastDecisions.quality+informations.qualityTrend,
@@ -250,19 +253,19 @@ var _BOT=function(){
                 }
                 $(document).on('decisionsSet',function(){
                     var availableMoney=$('.v-textfield').eq(43).val();
-                    var volume=$('.v-textfield').eq(1).val();
+                    var volume=parseInt($('.v-textfield').eq(1).val());
                     var singleCost=$('.v-textfield').eq(4).val();
                     if(availableMoney<0 || availableMoney>singleCost){
                         var decisions={
                             volume: volume+Math.floor(availableMoney/singleCost)
                         };
-                        setDecisions(decisions,$(document).trigger('decisionsSet'));
+                        setDecisions(decisions,function(){$(document).trigger('decisionsSet');});
                     }else{
                         $(document).unbind('decisionSet');
-                        endTerm(function(){makeDecisions(term+1,end);});
+                        endTerm(term+1,function(){makeDecisions(term+1,end);});
                     }
                 });
-                setDecisions(decisions,$(document).trigger('decisionsSet'));
+                setDecisions(decisions,function(){$(document).trigger('decisionsSet');});
             });
         };
         var enterG=function(end){
@@ -272,3 +275,4 @@ var _BOT=function(){
     };
 };
 var BOT=new _BOT();
+BOT.start();
